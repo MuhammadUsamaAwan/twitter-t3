@@ -58,6 +58,9 @@ export default function Home() {
   const [text, setText] = useState("");
   const scrollPosition = useScrollPosition();
   const { status, data: session } = useSession();
+  // like
+  const like = trpc.tweet.like.useMutation();
+  const unlike = trpc.tweet.unlike.useMutation();
   // create tweet
   const { mutateAsync, isLoading } = trpc.tweet.create.useMutation({
     onSuccess: () => setText(""),
@@ -75,7 +78,7 @@ export default function Home() {
 
   // fetch more tweets
   useEffect(() => {
-    if (scrollPosition > 90 && hasNextPage && !isFetching) {
+    if (scrollPosition > 95 && hasNextPage && !isFetching) {
       fetchNextPage();
     }
   }, [scrollPosition, hasNextPage, isFetching, fetchNextPage]);
@@ -127,7 +130,7 @@ export default function Home() {
         className="mb-2"
       >
         <textarea
-          rows={4}
+          rows={3}
           placeholder="Tweet..."
           className="m w-full rounded border-gray-600 bg-gray-700 p-2.5 text-white placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-blue-500"
           value={text}
@@ -160,7 +163,28 @@ export default function Home() {
                 <div>. {dayjs(tweet.createdAt).fromNow()}</div>
               </div>
               <p className="font-light">{tweet.text}</p>
-              <button>Like</button>
+              <div className="space-x-2">
+                <span>{tweet._count.Like}</span>
+                <button
+                  onClick={() => {
+                    if (!like.isLoading && !unlike.isLoading) {
+                      if (
+                        tweet.Like.some(
+                          (like) => like.user.id === session?.user?.id
+                        )
+                      ) {
+                        unlike.mutateAsync({ tweetId: tweet.id });
+                      } else {
+                        like.mutateAsync({ tweetId: tweet.id });
+                      }
+                    }
+                  }}
+                >
+                  {tweet.Like.some((like) => like.user.id === session?.user?.id)
+                    ? "Unlike"
+                    : "Like"}
+                </button>
+              </div>
             </div>
           </div>
         </article>

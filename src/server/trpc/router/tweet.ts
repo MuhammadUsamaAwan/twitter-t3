@@ -32,6 +32,21 @@ export const tweetRouter = router({
               image: true,
             },
           },
+          _count: {
+            select: {
+              Like: true,
+            },
+          },
+          Like: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
         },
         orderBy: [
           {
@@ -51,7 +66,7 @@ export const tweetRouter = router({
       };
     }),
   like: protectedProcedure
-    .input(z.object({ tweetId: z.string().uuid() }))
+    .input(z.object({ tweetId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.prisma.like.create({
         data: {
@@ -61,7 +76,7 @@ export const tweetRouter = router({
       });
     }),
   unlike: protectedProcedure
-    .input(z.object({ tweetId: z.string().uuid() }))
+    .input(z.object({ tweetId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.prisma.like.delete({
         where: {
