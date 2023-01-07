@@ -3,6 +3,7 @@ import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 
 import { trpc } from "../utils/trpc";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import "../styles/globals.css";
 
@@ -15,6 +16,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
       <main className="grid min-h-screen justify-center bg-gray-900">
         <Component {...pageProps} />
       </main>
+      <ReactQueryDevtools />
     </SessionProvider>
   );
 };

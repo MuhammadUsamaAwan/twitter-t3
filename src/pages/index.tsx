@@ -55,15 +55,23 @@ function useScrollPosition() {
 
 // Home Page
 export default function Home() {
+  const util = trpc.useContext();
   const [text, setText] = useState("");
   const scrollPosition = useScrollPosition();
   const { status, data: session } = useSession();
   // like
-  const like = trpc.tweet.like.useMutation();
-  const unlike = trpc.tweet.unlike.useMutation();
+  const like = trpc.tweet.like.useMutation({
+    onSuccess: () => util.tweet.getAll.invalidate(),
+  });
+  const unlike = trpc.tweet.unlike.useMutation({
+    onSuccess: () => util.tweet.getAll.invalidate(),
+  });
   // create tweet
   const { mutateAsync, isLoading } = trpc.tweet.create.useMutation({
-    onSuccess: () => setText(""),
+    onSuccess: () => {
+      setText("");
+      util.tweet.getAll.invalidate();
+    },
   });
   // tweet inifinite query
   const { data, hasNextPage, fetchNextPage, isFetching } =
@@ -82,11 +90,14 @@ export default function Home() {
       fetchNextPage();
     }
   }, [scrollPosition, hasNextPage, isFetching, fetchNextPage]);
+  // query client
 
+  // auth loading
   if (status === "loading") {
     return <div className="text-white">Loading...</div>;
   }
 
+  // signup
   if (status === "unauthenticated") {
     return (
       <div className="grid place-content-center">
