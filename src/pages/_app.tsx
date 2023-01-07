@@ -12,7 +12,9 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <Component {...pageProps} />
+      <main className="grid min-h-screen justify-center bg-gray-900">
+        <Component {...pageProps} />
+      </main>
     </SessionProvider>
   );
 };

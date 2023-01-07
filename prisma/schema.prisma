@@ -42,6 +42,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  Tweet         Tweet[]
 }
 
 model VerificationToken {
@@ -50,4 +51,11 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Tweet {
+  id       String @id @default(cuid())
+  text     String
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
