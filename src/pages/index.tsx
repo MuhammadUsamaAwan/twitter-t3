@@ -2,30 +2,7 @@
 import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { trpc } from "../utils/trpc";
-import Image from "next/image";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import updateLocal from "dayjs/plugin/updateLocale";
-
-dayjs.extend(relativeTime);
-dayjs.extend(updateLocal);
-dayjs.updateLocale("en", {
-  relativeTime: {
-    future: "in %s",
-    past: "%s",
-    s: "1m",
-    m: "1m",
-    mm: "%dm",
-    h: "1h",
-    hh: "%dh",
-    d: "1d",
-    dd: "%dd",
-    M: "1M",
-    MM: "%dM",
-    y: "1y",
-    yy: "%dy",
-  },
-});
+import Tweet from "../components/Tweet";
 
 // useScrollPosition Custom Hook
 function useScrollPosition() {
@@ -60,12 +37,6 @@ export default function Home() {
   const scrollPosition = useScrollPosition();
   const { status, data: session } = useSession();
   // like
-  const like = trpc.tweet.like.useMutation({
-    onSuccess: () => util.tweet.getAll.invalidate(),
-  });
-  const unlike = trpc.tweet.unlike.useMutation({
-    onSuccess: () => util.tweet.getAll.invalidate(),
-  });
   // create tweet
   const { mutateAsync, isLoading } = trpc.tweet.create.useMutation({
     onSuccess: () => {
@@ -159,46 +130,11 @@ export default function Home() {
       </form>
       {/* tweets */}
       {tweets?.map((tweet) => (
-        <article key={tweet.id} className="mb-2 py-2 text-white">
-          <div className="flex items-start space-x-2">
-            <Image
-              className="rounded-full"
-              src={tweet.author.image || ""}
-              alt="tweet"
-              width={40}
-              height={40}
-            />
-            <div>
-              <div className="flex items-center space-x-2">
-                <div className="font-semibold">{tweet.author.name}</div>
-                <div>. {dayjs(tweet.createdAt).fromNow()}</div>
-              </div>
-              <p className="font-light">{tweet.text}</p>
-              <div className="space-x-2">
-                <span>{tweet._count.Like}</span>
-                <button
-                  onClick={() => {
-                    if (!like.isLoading && !unlike.isLoading) {
-                      if (
-                        tweet.Like.some(
-                          (like) => like.user.id === session?.user?.id
-                        )
-                      ) {
-                        unlike.mutateAsync({ tweetId: tweet.id });
-                      } else {
-                        like.mutateAsync({ tweetId: tweet.id });
-                      }
-                    }
-                  }}
-                >
-                  {tweet.Like.some((like) => like.user.id === session?.user?.id)
-                    ? "Unlike"
-                    : "Like"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </article>
+        <Tweet
+          tweet={tweet}
+          key={tweet.id}
+          userId={session?.user?.id as string}
+        />
       ))}
     </div>
   );
