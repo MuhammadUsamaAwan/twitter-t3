@@ -1,42 +1,14 @@
-// imports
 import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { trpc } from "../utils/trpc";
 import Tweet from "../components/Tweet";
+import useScrollPosition from "../hooks/useScrollPosition";
 
-// useScrollPosition Custom Hook
-function useScrollPosition() {
-  const [scrollPosition, setScrollPosition] = useState(0);
-
-  const handleScroll = () => {
-    const height =
-      document.documentElement.scrollHeight -
-      document.documentElement.clientHeight;
-    const winScroll =
-      document.body.scrollTop || document.documentElement.scrollTop;
-
-    const scrolled = (winScroll / height) * 100;
-    setScrollPosition(scrolled);
-  };
-
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  return scrollPosition;
-}
-
-// Home Page
 export default function Home() {
   const util = trpc.useContext();
   const [text, setText] = useState("");
   const scrollPosition = useScrollPosition();
   const { status, data: session } = useSession();
-  // like
   // create tweet
   const { mutateAsync, isLoading } = trpc.tweet.create.useMutation({
     onSuccess: () => {
@@ -61,7 +33,6 @@ export default function Home() {
       fetchNextPage();
     }
   }, [scrollPosition, hasNextPage, isFetching, fetchNextPage]);
-  // query client
 
   // auth loading
   if (status === "loading") {
