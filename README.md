@@ -6,6 +6,7 @@
 - Create tweets
 - List tweet using cursor page pagination
 - Like and unlike tweets
+- Relative date with dynamic update
 
 ## Start Up Instruction
 
