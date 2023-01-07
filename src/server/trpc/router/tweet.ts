@@ -13,4 +13,7 @@ export const tweetRouter = router({
         },
       });
     }),
+  getAll: protectedProcedure.query(({ ctx }) => {
+    return ctx.prisma.tweet.findMany();
+  }),
 });
