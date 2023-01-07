@@ -1,13 +1,84 @@
-import { useState } from "react";
+// imports
+import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { trpc } from "../utils/trpc";
+import Image from "next/image";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import updateLocal from "dayjs/plugin/updateLocale";
 
+dayjs.extend(relativeTime);
+dayjs.extend(updateLocal);
+dayjs.updateLocale("en", {
+  relativeTime: {
+    future: "in %s",
+    past: "%s",
+    s: "1m",
+    m: "1m",
+    mm: "%dm",
+    h: "1h",
+    hh: "%dh",
+    d: "1d",
+    dd: "%dd",
+    M: "1M",
+    MM: "%dM",
+    y: "1y",
+    yy: "%dy",
+  },
+});
+
+// useScrollPosition Custom Hook
+function useScrollPosition() {
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  const handleScroll = () => {
+    const height =
+      document.documentElement.scrollHeight -
+      document.documentElement.clientHeight;
+    const winScroll =
+      document.body.scrollTop || document.documentElement.scrollTop;
+
+    const scrolled = (winScroll / height) * 100;
+    setScrollPosition(scrolled);
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  return scrollPosition;
+}
+
+// Home Page
 export default function Home() {
   const [text, setText] = useState("");
+  const scrollPosition = useScrollPosition();
   const { status, data: session } = useSession();
+  // create tweet
   const { mutateAsync, isLoading } = trpc.tweet.create.useMutation({
     onSuccess: () => setText(""),
   });
+  // tweet inifinite query
+  const { data, hasNextPage, fetchNextPage, isFetching } =
+    trpc.tweet.getAll.useInfiniteQuery(
+      {},
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      }
+    );
+  // get tweets
+  const tweets = data?.pages.flatMap((page) => page.tweets ?? []);
+
+  // fetch more tweets
+  useEffect(() => {
+    if (scrollPosition > 90 && hasNextPage && !isFetching) {
+      fetchNextPage();
+    }
+  }, [scrollPosition, hasNextPage, isFetching, fetchNextPage]);
 
   if (status === "loading") {
     return <div className="text-white">Loading...</div>;
@@ -72,6 +143,28 @@ export default function Home() {
           </button>
         </div>
       </form>
+      {/* tweets */}
+      {tweets?.map((tweet) => (
+        <article key={tweet.id} className="mb-2 py-2 text-white">
+          <div className="flex items-start space-x-2">
+            <Image
+              className="rounded-full"
+              src={tweet.author.image || ""}
+              alt="tweet"
+              width={40}
+              height={40}
+            />
+            <div>
+              <div className="flex items-center space-x-2">
+                <div className="font-semibold">{tweet.author.name}</div>
+                <div>. {dayjs(tweet.createdAt).fromNow()}</div>
+              </div>
+              <p className="font-light">{tweet.text}</p>
+              <button>Like</button>
+            </div>
+          </div>
+        </article>
+      ))}
     </div>
   );
 }
